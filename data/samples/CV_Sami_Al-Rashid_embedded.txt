@@ -1,0 +1,20 @@
+SAMI AL-RASHID
+Electrical Engineer — Riyadh, Saudi Arabia (fictional candidate)
+
+PROFILE
+Electrical engineering graduate with 3 years of experience in embedded systems and industrial automation. Strong programmer (Python, C++), comfortable with PLC and SCADA integration.
+
+EXPERIENCE
+Automation Engineer, Gulf Controls Co. (2023–2026)
+- Programmed Siemens PLCs and built SCADA screens for water pumping stations.
+- Wrote Python tools to parse relay event logs and automate test reports.
+- Supported testing and commissioning of MV motor control centres.
+
+Graduate Engineer, Najd Embedded Labs (2022–2023)
+- Embedded C++ firmware for energy meters; MATLAB modelling of power quality.
+
+EDUCATION
+B.Sc. Electrical Engineering, King Saud University (2022)
+
+SKILLS
+Python, C++, embedded firmware, PLC, SCADA, MATLAB, commissioning, testing

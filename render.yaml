@@ -1,0 +1,28 @@
+# Render Blueprint: one Docker web service with a persistent disk for the database, CVs and videos.
+services:
+  - type: web
+    name: tamheed
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter            # a disk needs a paid instance; keep ONE instance (SQLite + in-process worker)
+    numInstances: 1
+    healthCheckPath: /api/health
+    disk:
+      name: tamheed-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5-5
+      - key: EMAIL_ALLOWLIST
+        value: "*"
+      - key: ANTHROPIC_API_KEY   # secrets: you type these in the Render dashboard
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: HR_PASSWORD
+        sync: false
