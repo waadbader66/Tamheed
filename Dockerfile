@@ -21,7 +21,7 @@ COPY --from=web /app/frontend/dist frontend/dist
 ENV DATABASE_URL=sqlite:////data/tamheed.db \
     TAMHEED_STORAGE=/data/storage \
     COOKIE_SECURE=1 \
-    VIDEO_W=960 VIDEO_H=540 \
+    VIDEO_W=960 VIDEO_H=540 VIDEO_FPS=15 FFMPEG_THREADS=2 \
     PYTHONUNBUFFERED=1
 WORKDIR /app/backend
 CMD ["sh", "-c", "mkdir -p /data/storage && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

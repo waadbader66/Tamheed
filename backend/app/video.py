@@ -5,6 +5,7 @@ Pipeline: structured script -> macOS TTS per line -> audio timeline -> Pillow mo
 piped into FFmpeg -> H.264/AAC MP4.
 """
 import math
+import os
 import random
 import shutil
 import subprocess
@@ -622,6 +623,8 @@ def render(script: dict, out_path: Path) -> dict:
         tmp_out = out_path.with_suffix(".part.mp4")
         cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(fps), "-i", "-",
                "-i", str(wav), "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p",
+               # small servers: x264 would start one thread per host CPU and reserve memory for each
+               "-threads", os.environ.get("FFMPEG_THREADS", "2"), "-x264-params", "rc-lookahead=10",
                "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", str(tmp_out)]
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         backdrops = [Backdrop(i, i * 13 + 5) for i in range(len(scenes))]
