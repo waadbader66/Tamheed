@@ -432,6 +432,33 @@ def hr_invitations(_: User = Depends(require_hr), db: Session = Depends(get_db))
     return [inv_out(i) for i in db.query(Invitation).order_by(Invitation.id.desc())]
 
 
+@app.get("/api/hr/email-check")
+def hr_email_check(_: User = Depends(require_hr)):
+    """Diagnoses the sender settings and tries a Gmail sign-in WITHOUT sending anything. Never returns the password."""
+    import os
+    import re as _re
+    import smtplib
+    user = os.environ.get("SMTP_USER", config.SMTP_USER) or ""
+    raw = os.environ.get("SMTP_PASSWORD", config.SMTP_PASSWORD) or ""
+    pw = raw.replace(" ", "")
+    out = {"smtp_user": user, "user_has_spaces_or_quotes": user != user.strip().strip('"').strip("'"),
+           "password_set": bool(pw), "password_length_without_spaces": len(pw),
+           "password_looks_like_app_password": bool(_re.fullmatch(r"[a-z]{16}", pw)),
+           "password_has_quotes": raw.strip()[:1] in "\"'" if raw.strip() else False,
+           "smtp_host": os.environ.get("SMTP_HOST", config.SMTP_HOST), "smtp_port": int(os.environ.get("SMTP_PORT", config.SMTP_PORT))}
+    try:
+        with smtplib.SMTP(out["smtp_host"], out["smtp_port"], timeout=20) as s:
+            s.ehlo(); s.starttls(); s.ehlo()
+            s.user, s.password = user, pw
+            s.auth("PLAIN", s.auth_plain, initial_response_ok=True)
+        out["gmail_login"] = "OK — Gmail accepted the sign-in"
+    except smtplib.SMTPAuthenticationError as e:
+        out["gmail_login"] = f"REJECTED ({e.smtp_code}): {e.smtp_error.decode(errors='ignore')[:160]}"
+    except Exception as e:
+        out["gmail_login"] = f"ERROR: {type(e).__name__}: {str(e)[:160]}"
+    return out
+
+
 @app.post("/api/hr/invitations/{inv_id}/resend")
 def hr_resend(inv_id: int, hr: User = Depends(require_hr), db: Session = Depends(get_db)):
     inv = db.get(Invitation, inv_id) or _404()

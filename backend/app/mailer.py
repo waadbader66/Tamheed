@@ -64,8 +64,9 @@ def send(msg: EmailMessage) -> None:
     with smtplib.SMTP(host, port, timeout=30) as s:
         s.ehlo(); s.starttls(); s.ehlo()
         # Single AUTH PLAIN attempt: smtplib's fallback to AUTH LOGIN makes Gmail drop the connection and hides the real error.
-        s.user = os.environ.get("SMTP_USER", config.SMTP_USER)
-        s.password = os.environ.get("SMTP_PASSWORD", config.SMTP_PASSWORD).replace(" ", "")  # Gmail shows app passwords with spaces
+        s.user = os.environ.get("SMTP_USER", config.SMTP_USER).strip().strip('"').strip("'")
+        # Gmail shows app passwords with spaces; dashboards sometimes keep pasted quotes
+        s.password = os.environ.get("SMTP_PASSWORD", config.SMTP_PASSWORD).strip().strip('"').strip("'").replace(" ", "")
         try:
             s.auth("PLAIN", s.auth_plain, initial_response_ok=True)
         except smtplib.SMTPAuthenticationError as e:
