@@ -48,23 +48,6 @@ private GitHub repo → Render → **New → Blueprint** → pick the repo → f
 (`ANTHROPIC_API_KEY`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `HR_PASSWORD`) → **Apply**.
 Invitation links use the `https://….onrender.com` address automatically.
 
-## Deploy on Railway (alternative)
-
-The repo contains a `Dockerfile` (builds the website, installs FFmpeg + Linux voices + fonts) and `railway.json`
-(one replica, health check `/api/health`).
-
-1. Install the CLI and sign in: `npm i -g @railway/cli` → `railway login`
-2. From this folder: `railway init` (new project) → `railway up` (uploads and builds)
-3. In the Railway dashboard for the service:
-   - **Volume**: add one mounted at **`/data`** (database, CVs and videos live there and survive redeploys).
-   - **Variables**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`,
-     `EMAIL_ALLOWLIST`, `HR_PASSWORD`.
-   - **Networking → Generate domain** (gives `https://…up.railway.app`; invitation links use it automatically).
-4. Redeploy. The fictional company is created on first start; sign in as `hr@rimal.example` with your `HR_PASSWORD`.
-
-Notes: keep **one replica** (SQLite + in-process worker). On Linux the video voices use `espeak-ng` (robotic compared
-with macOS voices); video renders at 960×540 to stay fast on small instances.
-
 ## Architecture
 
 - `backend/app/main.py` — FastAPI: auth (bcrypt, httpOnly cookie), HR and employee APIs, ownership checks; serves the
