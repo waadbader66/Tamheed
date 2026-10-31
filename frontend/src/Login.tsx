@@ -28,7 +28,13 @@ export function Login({ onDone, notice }: { onDone: (u: any) => void; notice?: s
   const [password, setP] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [judgeOn, setJudgeOn] = useState(false);
   useEffect(() => { const t = params.get("invite"); if (t) api("/invitations/viewed", { body: { token: t } }).catch(() => {}); }, []);
+  useEffect(() => { if (!invited) api("/health").then((h) => setJudgeOn(!!h.judge_access)).catch(() => {}); }, []);
+  async function judge() {
+    setBusy(true); setErr("");
+    try { onDone(await api("/auth/judge", { body: {} })); } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
+  }
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!username.trim() || !password) { setErr("Enter your username and password."); return; }
@@ -51,6 +57,10 @@ export function Login({ onDone, notice }: { onDone: (u: any) => void; notice?: s
         {notice && !err && <div className="note">{notice}</div>}
         {err && <div className="err" role="alert">{err}</div>}
         <button className="primary big" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
+        {judgeOn && <div className="judge-box">
+          <div className="or"><span>Hackathon judges</span></div>
+          <button type="button" className="judge-btn" disabled={busy} onClick={judge}>Sign in as judge — no username or password needed</button>
+        </div>}
       </form>
     </div>
   );
