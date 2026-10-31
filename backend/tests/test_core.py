@@ -414,9 +414,11 @@ def test_completed_hires_move_to_existing_after_grace_period(client):
 def test_judge_link_signs_in_to_separate_hr_account(client, monkeypatch):
     monkeypatch.delenv("JUDGE_ACCESS_KEY", raising=False)  # independent of any local .env
     client.cookies.clear()
-    assert client.post("/api/auth/judge", json={"key": "anything"}).status_code == 403          # off by default
-    assert client.post("/api/auth/judge", json={}).status_code == 403                           # button also off
+    monkeypatch.setenv("JUDGE_ACCESS", "off")
+    assert client.post("/api/auth/judge", json={}).status_code == 403                           # switched off
     assert client.get("/api/health").json()["judge_access"] is False
+    monkeypatch.delenv("JUDGE_ACCESS")                                                           # on by default
+    assert client.get("/api/health").json()["judge_access"] is True
     monkeypatch.setenv("JUDGE_ACCESS_KEY", "judge-key-1234567890")
     assert client.post("/api/auth/judge", json={"key": "wrong-key-1234567890"}).status_code == 403
     assert client.get("/api/health").json()["judge_access"] is True
@@ -428,6 +430,6 @@ def test_judge_link_signs_in_to_separate_hr_account(client, monkeypatch):
     assert client.get("/api/hr/overview").status_code == 200 and client.get("/api/hr/evaluation").status_code == 200
     any_hire = client.get("/api/hr/overview").json()["hires"][0]["id"]
     assert client.delete(f"/api/hr/employees/{any_hire}").status_code == 403                    # judges can't delete
-    monkeypatch.delenv("JUDGE_ACCESS_KEY")
+    monkeypatch.setenv("JUDGE_ACCESS", "off")
     client.cookies.clear()
     assert client.post("/api/auth/judge", json={"key": "judge-key-1234567890"}).status_code == 403  # switched off

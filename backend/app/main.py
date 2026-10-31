@@ -27,7 +27,7 @@ def _startup():
 def health():
     return {"ok": True, "product": config.PRODUCT_NAME, "claude": config.claude_enabled(), "model": config.ANTHROPIC_MODEL if config.claude_enabled() else None,
             "email_sender": __import__("app.mailer", fromlist=["x"]).sender_configured(),
-            "judge_access": len(_judge_key()) >= 16}
+            "judge_access": _judge_on()}
 
 
 # ---------------------------------------------------------------- auth
@@ -83,20 +83,26 @@ def _judge_key() -> str:
     return os.environ.get("JUDGE_ACCESS_KEY", "").strip().strip('"').strip("'").strip()
 
 
+def _judge_on() -> bool:
+    """Judge access is ON by default (hackathon demo). Set JUDGE_ACCESS=off in the host to switch it off."""
+    import os
+    return os.environ.get("JUDGE_ACCESS", "on").strip().strip('"').strip("'").lower() not in ("off", "0", "false", "no")
+
+
 JUDGE_USERNAME = "judge@rimal.example"
 
 
 @app.post("/api/auth/judge")
 def judge_login(body: JudgeIn, response: Response, db: Session = Depends(get_db)):
-    """One-click access for hackathon judges. Works only while JUDGE_ACCESS_KEY is set on the server;
-    signs in to a separate HR account (your own HR login stays private). Remove the key to disable the link."""
+    """One-click access for hackathon judges (empty username + password on the login page).
+    Signs in to a separate HR account that cannot delete; your own HR login stays private."""
     import hmac
     import os
     import secrets as _secrets
-    key = _judge_key()  # judge access is ON while JUDGE_ACCESS_KEY is set; remove it in the host to switch off
-    if len(key) < 16:
+    if not _judge_on():
         raise HTTPException(403, "Judge access is switched off.")
-    if body.key and not hmac.compare_digest(body.key.strip(), key):
+    key = _judge_key()  # optional: if set, a key sent with a judge link must match it
+    if body.key and key and not hmac.compare_digest(body.key.strip(), key):
         raise HTTPException(403, "This judge link is not valid.")
     u = db.query(User).filter_by(username=JUDGE_USERNAME).first()
     if not u:

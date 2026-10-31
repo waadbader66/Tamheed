@@ -39,7 +39,7 @@ Other commands: `./scripts/test.sh` (tests) · `./scripts/reset_demo.sh` (wipe d
 | `APP_BASE_URL` | Link in invitation emails (on Railway it defaults to the public domain). |
 | `HR_PASSWORD` | HR password for a **new** database (set this in production). |
 | `GRADUATE_DAYS` | Days after completion before a hire becomes an existing employee (default 21). |
-| `JUDGE_ACCESS_KEY` | Any value of 16+ characters shows a "Sign in as judge" button on the login page (HR access with no username/password; separate account that can't delete). Remove to switch it off. New hires still sign in with their email + emailed temporary password. |
+| `JUDGE_ACCESS` | Judge access is **on by default**: judges leave username + password empty and click Sign in (separate HR account that can't delete). Set to `off` to switch it off. New hires still use their email + emailed temporary password. |
 | `COOKIE_SECURE` | `1` when served over HTTPS (set in the Dockerfile). |
 
 ## Deploy on Render
