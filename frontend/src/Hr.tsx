@@ -23,16 +23,17 @@ export function HrApp({ user, onLogout }: { user: any; onLogout: () => void }) {
   const id = parts[2];
   const navKey = page === "prep" || page === "employee" || page === "edit" ? "overview" : page;
   return (
+    <>{user.judge && <div className="judgebar">👋 Judge access — explore freely: add an employee, watch the agent, and see <a href="#/hr/evaluation">Evaluation</a>.</div>}
     <Shell scope="HR workspace" nav={NAV} active={navKey} onNav={(k) => (location.hash = `/hr/${k}`)} user={user} onLogout={onLogout}>
       {page === "add" && <AddEmployee />}
       {page === "edit" && <AddEmployee editId={id} />}
       {page === "prep" && <Preparation caseId={id} />}
-      {page === "employee" && <EmployeeRecord id={id} />}
+      {page === "employee" && <EmployeeRecord id={id} judge={!!user.judge} />}
       {page === "invitations" && <Invitations />}
       {page === "directory" && <Directory />}
       {page === "evaluation" && <Evaluation />}
       {navKey === "overview" && page !== "prep" && page !== "employee" && page !== "edit" && <Overview />}
-    </Shell>
+    </Shell></>
   );
 }
 
@@ -300,7 +301,7 @@ function ProgRow({ label, a, b, hint }: { label: string; a: number; b: number; h
   );
 }
 
-function EmployeeRecord({ id }: { id: string }) {
+function EmployeeRecord({ id, judge }: { id: string; judge?: boolean }) {
   const [d, reload] = usePoll<any>(`/hr/employees/${id}`, 5000);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -331,7 +332,7 @@ function EmployeeRecord({ id }: { id: string }) {
         <div><h1>{p.name}</h1><p>{p.title}{p.project ? ` · ${p.project.name}` : ""} · starts {fmtDate(p.start_date)}</p></div>
         {p.is_new_hire && <div className="row">
           <button className="ghost sm" onClick={() => (location.hash = `/hr/edit/${id}`)}>Edit</button>
-          <button className="ghost sm danger-t" onClick={() => setConfirm(true)}>Delete</button>
+          {!judge && <button className="ghost sm danger-t" onClick={() => setConfirm(true)}>Delete</button>}
         </div>}
       </div>
       {confirm && (

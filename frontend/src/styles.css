@@ -364,3 +364,5 @@ textarea { resize: vertical; }
 @media (max-width: 800px) { .testlist { columns: 1; } }
 .li.row { flex-direction: row; align-items: center; gap: 16px; }
 .li.row > div { flex: 1; min-width: 0; }
+.judgebar { background: var(--gold); color: var(--ink); text-align: center; font-size: 14px; font-weight: 600; padding: 8px 12px; }
+.judgebar a { color: var(--ink); }

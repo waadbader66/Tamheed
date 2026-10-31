@@ -11,6 +11,15 @@ export default function App() {
   useEffect(() => {
     // Opening the invitation link always starts from a clean sign-in page, even if someone (e.g. HR) is signed in.
     if (location.hash.includes("invite=")) { api("/auth/logout", { body: {} }).catch(() => {}).finally(() => setUser(null)); return; }
+    if (location.hash.startsWith("#/judge")) {  // one-click access for hackathon judges
+      if ((window as any).__judgeStarted) return;
+      (window as any).__judgeStarted = true;
+      const key = new URLSearchParams(location.hash.split("?")[1] || "").get("key") || "";
+      api("/auth/judge", { body: { key } })
+        .then((u) => { setUser(u); location.hash = "/hr/overview"; })
+        .catch((e) => { setNotice(e.message || "This judge link is not valid."); setUser(null); location.hash = "/login"; });
+      return;
+    }
     api("/auth/me").then(setUser).catch(() => setUser(null));
   }, []);
   useEffect(() => {

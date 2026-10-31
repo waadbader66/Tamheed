@@ -409,3 +409,18 @@ def test_completed_hires_move_to_existing_after_grace_period(client):
     db.commit()
     assert completion.graduate_due(db) == 1 and db.get(OnboardingCase, case.id).employee.is_new_hire is False
     db.close()
+
+
+def test_judge_link_signs_in_to_separate_hr_account(client, monkeypatch):
+    client.cookies.clear()
+    assert client.post("/api/auth/judge", json={"key": "anything"}).status_code == 403          # off by default
+    monkeypatch.setenv("JUDGE_ACCESS_KEY", "judge-key-1234567890")
+    assert client.post("/api/auth/judge", json={"key": "wrong-key-1234567890"}).status_code == 403
+    r = client.post("/api/auth/judge", json={"key": "judge-key-1234567890"})
+    assert r.status_code == 200 and r.json()["judge"] and r.json()["kind"] == "hr"
+    assert client.get("/api/hr/overview").status_code == 200 and client.get("/api/hr/evaluation").status_code == 200
+    any_hire = client.get("/api/hr/overview").json()["hires"][0]["id"]
+    assert client.delete(f"/api/hr/employees/{any_hire}").status_code == 403                    # judges can't delete
+    monkeypatch.delenv("JUDGE_ACCESS_KEY")
+    client.cookies.clear()
+    assert client.post("/api/auth/judge", json={"key": "judge-key-1234567890"}).status_code == 403  # switched off

@@ -37,8 +37,9 @@ class LoginIn(BaseModel):
 
 def user_out(u: User):
     e = u.employee
-    return {"id": u.id, "username": u.username, "kind": u.kind, "must_change_password": u.must_change_password,
-            "name": e.full_name if e else u.username, "title": e.title if e else ""}
+    judge = u.username == "judge@rimal.example"
+    return {"id": u.id, "username": u.username, "kind": u.kind, "must_change_password": u.must_change_password, "judge": judge,
+            "name": "Hackathon judge" if judge else (e.full_name if e else u.username), "title": "HR demo access" if judge else (e.title if e else "")}
 
 
 @app.post("/api/auth/login")
@@ -67,6 +68,42 @@ def login(body: LoginIn, response: Response, db: Session = Depends(get_db)):
         if inv and not inv.first_login_at:
             inv.first_login_at = datetime.utcnow()
     audit(db, u.username, "login")
+    token = create_session(db, u)
+    response.set_cookie(COOKIE, token, httponly=True, samesite="lax", max_age=12 * 3600, secure=config.COOKIE_SECURE)
+    return user_out(u)
+
+
+class JudgeIn(BaseModel):
+    key: str
+
+
+JUDGE_USERNAME = "judge@rimal.example"
+
+
+@app.post("/api/auth/judge")
+def judge_login(body: JudgeIn, response: Response, db: Session = Depends(get_db)):
+    """One-click access for hackathon judges. Works only while JUDGE_ACCESS_KEY is set on the server;
+    signs in to a separate HR account (your own HR login stays private). Remove the key to disable the link."""
+    import hmac
+    import os
+    import secrets as _secrets
+    key = os.environ.get("JUDGE_ACCESS_KEY", "")
+    if not key or len(key) < 16 or not hmac.compare_digest(body.key.strip(), key):
+        raise HTTPException(403, "This judge link is not valid or has been switched off.")
+    u = db.query(User).filter_by(username=JUDGE_USERNAME).first()
+    if not u:
+        hr_emp = db.query(User).filter_by(kind="hr").first()
+        from sqlalchemy.exc import IntegrityError
+        try:
+            u = User(username=JUDGE_USERNAME, password_hash=hash_password(_secrets.token_urlsafe(24)), kind="hr",
+                     employee_id=hr_emp.employee_id if hr_emp else None)
+            db.add(u)
+            db.flush()
+        except IntegrityError:  # two clicks at once: the other request created it
+            db.rollback()
+            u = db.query(User).filter_by(username=JUDGE_USERNAME).one()
+    u.last_login_at = datetime.utcnow()
+    audit(db, JUDGE_USERNAME, "judge-login")
     token = create_session(db, u)
     response.set_cookie(COOKIE, token, httponly=True, samesite="lax", max_age=12 * 3600, secure=config.COOKIE_SECURE)
     return user_out(u)
@@ -365,6 +402,8 @@ def hr_delete_employee(emp_id: int, hr: User = Depends(require_hr), db: Session 
     import shutil
     from .models import AuthSession
     e = db.get(Employee, emp_id) or _404()
+    if hr.username == JUDGE_USERNAME:
+        raise HTTPException(403, "Judge access can't delete employees.")
     if not e.is_new_hire:
         raise HTTPException(409, "Only new hires added through onboarding can be deleted here")
     case = db.query(OnboardingCase).filter_by(employee_id=e.id).first()

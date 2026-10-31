@@ -39,6 +39,7 @@ Other commands: `./scripts/test.sh` (tests) · `./scripts/reset_demo.sh` (wipe d
 | `APP_BASE_URL` | Link in invitation emails (on Railway it defaults to the public domain). |
 | `HR_PASSWORD` | HR password for a **new** database (set this in production). |
 | `GRADUATE_DAYS` | Days after completion before a hire becomes an existing employee (default 21). |
+| `JUDGE_ACCESS_KEY` | Enables the one-click judge link `/#/judge?key=…` (separate HR account, can't delete). Remove to switch it off. |
 | `COOKIE_SECURE` | `1` when served over HTTPS (set in the Dockerfile). |
 
 ## Deploy on Render
