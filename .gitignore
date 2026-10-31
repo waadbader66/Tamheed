@@ -9,3 +9,5 @@ __pycache__/
 data/explainer/
 .claude/
 .DS_Store
+backend/eval/results/*.log
+backend/eval/results/pytest.xml

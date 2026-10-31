@@ -354,3 +354,13 @@ textarea { resize: vertical; }
 .notice .link { color: var(--muted); }
 .celebrate { padding: 18px 22px; }
 .celebrate b { font-size: 17px; }
+
+/* evaluation */
+.evtbl td.best { color: var(--ok); font-weight: 800; }
+.evtbl td, .evtbl th { white-space: nowrap; }
+.evtbl td:first-child { white-space: normal; }
+.testlist { columns: 2; font-size: 13.5px; line-height: 1.9; }
+.tok { color: var(--ok); font-weight: 800; } .tbad { color: var(--bad); font-weight: 800; }
+@media (max-width: 800px) { .testlist { columns: 1; } }
+.li.row { flex-direction: row; align-items: center; gap: 16px; }
+.li.row > div { flex: 1; min-width: 0; }

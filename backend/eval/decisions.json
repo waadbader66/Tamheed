@@ -1,0 +1,37 @@
+[
+ {
+  "decision": "One Claude agent with tools, not many agents",
+  "why": "Simpler to inspect and test; tools give it exactly the data it needs (profile, role, team, catalog, records, web).",
+  "tradeoff": "Long tasks run sequentially (~30\u201360 s per hire)."
+ },
+ {
+  "decision": "Claude proposes, a validator decides",
+  "why": "Quotes must exist in the CV; courses, links, mentors and records must be real. Wrong items are sent back once, then corrected.",
+  "tradeoff": "Some good-but-unverifiable suggestions are dropped."
+ },
+ {
+  "decision": "Rule-based fallback",
+  "why": "If Claude is unavailable the service keeps working and labels the plan \u201cRules\u201d.",
+  "tradeoff": "Fallback can't catch wrong-person CVs or write warnings."
+ },
+ {
+  "decision": "Durable job pipeline in SQLite",
+  "why": "Every step is saved: survives restarts, retries failures, never duplicates invitations.",
+  "tradeoff": "One server instance (fine for a single company)."
+ },
+ {
+  "decision": "Humans keep high-stakes decisions",
+  "why": "The agent adapts training and mentoring (reversible); it never decides hiring, probation or pay.",
+  "tradeoff": "HR still verifies paperwork tasks."
+ },
+ {
+  "decision": "Hidden answer key + AI-assessed label",
+  "why": "Exercises can't be gamed from the browser; scores are clearly marked as AI-assessed.",
+  "tradeoff": "No manager sign-off screen (kept the product simple)."
+ },
+ {
+  "decision": "Claude Sonnet 5.5 for planning (Haiku 5.5 as a cheaper option)",
+  "why": "On the held-out set both models scored 100% skill accuracy with zero unsupported claims; Sonnet covered more skill gaps with a course (89% vs 82%).",
+  "tradeoff": "Sonnet costs ~$0.21 per hire vs ~$0.01 for Haiku \u2014 Haiku is a valid choice for high-volume hiring."
+ }
+]

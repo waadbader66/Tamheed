@@ -48,6 +48,24 @@ private GitHub repo → Render → **New → Blueprint** → pick the repo → f
 (`ANTHROPIC_API_KEY`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `HR_PASSWORD`) → **Apply**.
 Invitation links use the `https://….onrender.com` address automatically.
 
+## Evaluation (proof for the judges — HR → Evaluation tab)
+
+```bash
+cd backend
+../.venv/bin/python -m eval.run_eval sonnet eval/results/sonnet.json   # Claude Sonnet 5.5 (used in production)
+../.venv/bin/python -m eval.run_eval haiku  eval/results/haiku.json    # Claude Haiku 5.5 (cheaper alternative)
+../.venv/bin/python -m eval.run_eval rules  eval/results/rules.json    # rule-based baseline, no AI
+cd .. && .venv/bin/python scripts/test_report.py                        # automated tests → eval/results/tests.json
+```
+
+- `backend/eval/cases.py`: 12 held-out fictional hires (8 roles + missing CV, someone else's CV, hidden prompt-injection,
+  minimal CV), each with an answer sheet of the skills the text really proves.
+- Scored: skill accuracy, unsupported (wrongly credited) skills, mentors on the right team, gaps covered by a course,
+  problems flagged to HR, injection resistance, safety-check catches, time and cost per hire; plus an adaptation test
+  (project change) and a fallback test (Claude unavailable).
+- `iterations.json` (what testing found and what changed) and `decisions.json` (trade-offs) are shown alongside.
+- GitHub Actions runs the tests and the website build on every push (`.github/workflows/tests.yml`).
+
 ## Architecture
 
 - `backend/app/main.py` — FastAPI: auth (bcrypt, httpOnly cookie), HR and employee APIs, ownership checks; serves the

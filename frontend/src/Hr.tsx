@@ -7,6 +7,7 @@ const NAV = [
   { key: "add", label: "Add employee", icon: "＋" },
   { key: "invitations", label: "Invitations", icon: "✉" },
   { key: "directory", label: "All employees", icon: "☰" },
+  { key: "evaluation", label: "Evaluation", icon: "✓" },
 ];
 
 function useRoute() {
@@ -29,6 +30,7 @@ export function HrApp({ user, onLogout }: { user: any; onLogout: () => void }) {
       {page === "employee" && <EmployeeRecord id={id} />}
       {page === "invitations" && <Invitations />}
       {page === "directory" && <Directory />}
+      {page === "evaluation" && <Evaluation />}
       {navKey === "overview" && page !== "prep" && page !== "employee" && page !== "edit" && <Overview />}
     </Shell>
   );
@@ -466,6 +468,90 @@ function Directory() {
             {d.hires.map((h: any) => <tr key={"n" + h.id} onClick={() => (location.hash = `/hr/employee/${h.id}`)}><td><b>{h.name}</b><div className="sub">{h.code}</div></td><td>{h.title}</td><td>{h.department}</td><td><Pill tone="info">New hire</Pill></td></tr>)}
             {d.existing_employees.map((e: any) => <tr key={e.id} className="noclick"><td><b>{e.name}</b><div className="sub">{e.code}</div></td><td>{e.title}</td><td>{e.department}</td><td><Pill tone="neutral">Existing</Pill></td></tr>)}
           </tbody></table>
+      </Card>
+    </div>
+  );
+}
+
+
+const METRICS: [string, string, (s: any) => any, "high" | "low" | null][] = [
+  ["skill_accuracy", "Skill assessment accuracy", (s) => `${s.skill_accuracy}%`, "high"],
+  ["unsupported_claims", "Skills wrongly credited (unsupported)", (s) => s.unsupported_claims, "low"],
+  ["mentors_on_right_team", "Mentors on the right team", (s) => `${s.mentors_on_right_team}%`, "high"],
+  ["gaps_with_course", "Skill gaps covered by a course", (s) => `${s.gaps_with_course}%`, "high"],
+  ["warnings_detected", "Problems flagged to HR (missing / wrong CV)", (s) => s.warnings_detected, null],
+  ["injection_resisted", "Hidden-instruction attack resisted", (s) => (s.injection_resisted ? "Yes" : "No"), null],
+  ["web_courses", "Courses found on the web (verified)", (s) => s.web_courses, null],
+  ["guardrail_catches", "Safety-check catches", (s) => s.guardrail_catches, null],
+  ["avg_seconds", "Average time per hire", (s) => `${s.avg_seconds}s`, null],
+  ["avg_cost_usd", "Average cost per hire", (s) => (s.avg_cost_usd != null ? `$${s.avg_cost_usd}` : "$0"), null],
+];
+const SETUP_NAME: Record<string, string> = { sonnet: "Claude Sonnet 5.5 (used)", haiku: "Claude Haiku 5.5", rules: "Rules only (baseline)" };
+const KIND: Record<string, string> = { missing_cv: "No CV uploaded", wrong_person_cv: "CV belongs to someone else", prompt_injection: "CV with hidden instructions to the AI", minimal_cv: "Very short CV" };
+
+function Evaluation() {
+  const [d, setD] = useState<any>(null);
+  useEffect(() => { api("/hr/evaluation").then(setD).catch(() => setD({ setups: [] })); }, []);
+  if (!d) return <div className="loading">Loading…</div>;
+  const setups = d.setups;
+  const best = (key: string, dir: "high" | "low" | null) => {
+    if (!dir) return null;
+    const vals = setups.map((x: any) => Number(x.summary[key]));
+    return dir === "high" ? Math.max(...vals) : Math.min(...vals);
+  };
+  const sonnet = setups.find((x: any) => x.summary.setup === "sonnet");
+  const rules = setups.find((x: any) => x.summary.setup === "rules");
+  const t = d.tests;
+  return (
+    <div className="stack narrow-page">
+      <div className="page-h"><h1>Evaluation</h1><p>Every number below comes from real, re-runnable tests — not typed in by hand.</p></div>
+
+      <Card title="1 · Unseen test hires: Claude vs. a simpler baseline" action={setups[0] && <span className="sub">{setups[0].summary.cases} hires not used during development · run {setups[0].ran_at}</span>}>
+        {setups.length === 0 ? <Empty>No evaluation results yet.</Empty> : (
+          <div className="ws-wrap"><table className="tbl evtbl">
+            <thead><tr><th>Measure</th>{setups.map((x: any) => <th key={x.summary.setup}>{SETUP_NAME[x.summary.setup]}</th>)}</tr></thead>
+            <tbody>{METRICS.map(([k, label, fmt, dir]) => {
+              const b = best(k, dir);
+              return <tr key={k} className="noclick"><td>{label}</td>{setups.map((x: any) => (
+                <td key={x.summary.setup} className={b !== null && Number(x.summary[k]) === b ? "best" : ""}>{fmt(x.summary)}</td>))}</tr>;
+            })}</tbody>
+          </table></div>
+        )}
+        <p className="sub">12 fictional hires across 8 roles, each with an answer sheet of which skills the CV truly proves. “Unsupported” = a skill credited without real evidence.
+          “Safety-check catches” counts plan items the validator had to reject or correct on this set; the checks themselves are proven with deliberately wrong inputs (invented quotes, courses, links, mentors) in the automated tests below.</p>
+      </Card>
+
+      {sonnet && <Card title="2 · Robustness & adaptation (Claude Sonnet 5.5)">
+        {sonnet.cases.filter((c: any) => c.kind !== "normal").map((c: any) => {
+          const rb = rules?.cases.find((r: any) => r.id === c.id);
+          const ok = c.unsupported_claims.length === 0 && (!c.warning_expected || c.warning_found);
+          return <div key={c.id} className="li row between"><div><b>{KIND[c.kind] || c.kind}</b>
+            <div className="sub">{c.warning_expected ? (c.warning_found ? "Flagged to HR ✓ · " : "Not flagged · ") : ""}{c.unsupported_claims.length ? `wrongly credited: ${c.unsupported_claims.join(", ")}` : "no skills wrongly credited"}
+              {rb ? ` · rules baseline: ${rb.unsupported_claims.length} wrongly credited${rb.warning_expected ? (rb.warning_found ? ", flagged" : ", not flagged") : ""}` : ""}</div></div>
+            <Pill tone={ok ? "ok" : "bad"}>{ok ? "Pass" : "Fail"}</Pill></div>;
+        })}
+        {sonnet.adaptation && <div className="li row between"><div><b>Project changed (Al Noor → Metro Depot) — agent re-plans</b>
+          <div className="sub">{sonnet.adaptation.mentors_on_new_project_or_manager}/{sonnet.adaptation.mentors} mentors moved to the new project team or manager</div></div>
+          <Pill tone={sonnet.adaptation.mentors_on_new_project_or_manager === sonnet.adaptation.mentors ? "ok" : "warn"}>{sonnet.adaptation.mentors_on_new_project_or_manager === sonnet.adaptation.mentors ? "Pass" : "Partial"}</Pill></div>}
+        {sonnet.fallback && <div className="li row between"><div><b>Claude unavailable — service keeps working</b>
+          <div className="sub">Plan produced by: {sonnet.fallback.source} · valid plan: {sonnet.fallback.valid_plan ? "yes" : "no"}</div></div>
+          <Pill tone={sonnet.fallback.valid_plan && String(sonnet.fallback.source).startsWith("Rules") ? "ok" : "bad"}>{sonnet.fallback.valid_plan ? "Pass" : "Fail"}</Pill></div>}
+      </Card>}
+
+      <Card title="3 · Automated tests" action={t && <Pill tone={t.failed ? "bad" : "ok"}>{t.passed}/{t.total} passed</Pill>}>
+        {!t ? <Empty>Not run yet.</Empty> : <>
+          <p className="sub" style={{ marginTop: 0 }}>Run {t.ran_at} · {t.seconds}s · re-run with <code>./scripts/test.sh</code> — also runs automatically on GitHub for every change. Claude is replaced by recorded responses so results are repeatable.</p>
+          <div className="testlist">{t.tests.map((x: any) => <div key={x.name}><span className={x.ok ? "tok" : "tbad"}>{x.ok ? "✓" : "✗"}</span> {x.label}</div>)}</div>
+        </>}
+      </Card>
+
+      <Card title="4 · What testing found — and what we changed">
+        <table className="tbl"><thead><tr><th>Area</th><th>Found</th><th>Fix</th><th>Verified by</th></tr></thead>
+          <tbody>{d.iterations.map((x: any, i: number) => <tr key={i} className="noclick"><td><b>{x.area}</b></td><td className="sub">{x.found}</td><td className="sub">{x.fix}</td><td className="sub">{x.check}</td></tr>)}</tbody></table>
+      </Card>
+
+      <Card title="5 · Key decisions & trade-offs">
+        {d.decisions.map((x: any, i: number) => <div key={i} className="li"><b>{x.decision}</b><div className="sub">{x.why}</div><div className="sub"><i>Trade-off:</i> {x.tradeoff}</div></div>)}
       </Card>
     </div>
   );

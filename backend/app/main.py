@@ -432,6 +432,20 @@ def hr_invitations(_: User = Depends(require_hr), db: Session = Depends(get_db))
     return [inv_out(i) for i in db.query(Invitation).order_by(Invitation.id.desc())]
 
 
+@app.get("/api/hr/evaluation")
+def hr_evaluation(_: User = Depends(require_hr)):
+    """Proof page: held-out evaluation per setup, automated test results, iteration log and design decisions.
+    Everything comes from files produced by real runs (backend/eval)."""
+    import json as _json
+    base = Path(__file__).resolve().parents[1] / "eval"
+
+    def load(name):
+        f = base / name
+        return _json.loads(f.read_text()) if f.exists() else None
+    return {"setups": [x for x in (load("results/sonnet.json"), load("results/haiku.json"), load("results/rules.json")) if x],
+            "tests": load("results/tests.json"), "iterations": load("iterations.json") or [], "decisions": load("decisions.json") or []}
+
+
 @app.get("/api/hr/email-check")
 def hr_email_check(_: User = Depends(require_hr)):
     """Diagnoses the sender settings and tries a Gmail sign-in WITHOUT sending anything. Never returns the password."""

@@ -1,0 +1,93 @@
+{
+  "total": 14,
+  "passed": 14,
+  "failed": 0,
+  "seconds": 21.0,
+  "ran_at": "2026-10-31 04:14",
+  "tests": [
+    {
+      "name": "test_login_errors_and_role_separation",
+      "label": "Sign-in errors and HR/employee separation",
+      "ok": true,
+      "seconds": 0.948
+    },
+    {
+      "name": "test_full_flow_personalisation_and_isolation",
+      "label": "Full flow: two CVs \u2192 different plans; employees can't see each other's data",
+      "ok": true,
+      "seconds": 1.961
+    },
+    {
+      "name": "test_failed_stage_is_visible_and_retryable",
+      "label": "A failed step is visible, retryable and never duplicates invitations",
+      "ok": true,
+      "seconds": 0.504
+    },
+    {
+      "name": "test_claude_failure_falls_back",
+      "label": "Claude errors fall back to labelled rule-based answers",
+      "ok": true,
+      "seconds": 0.002
+    },
+    {
+      "name": "test_claude_script_path_keeps_visuals",
+      "label": "Video narration from Claude keeps facts from the database; too-long scripts rejected",
+      "ok": true,
+      "seconds": 0.0
+    },
+    {
+      "name": "test_allowlist_star_allows_any_address",
+      "label": "Invitations can go to any email address",
+      "ok": true,
+      "seconds": 0.0
+    },
+    {
+      "name": "test_hr_can_delete_new_hire_and_everything_goes",
+      "label": "Deleting a hire removes all their data and files",
+      "ok": true,
+      "seconds": 0.95
+    },
+    {
+      "name": "test_every_emailed_password_works_until_changed",
+      "label": "Every emailed temporary password works until the hire sets their own",
+      "ok": true,
+      "seconds": 3.031
+    },
+    {
+      "name": "test_agent_plan_guardrails_adaptation_and_review",
+      "label": "Agent guardrails: invented quotes, courses, links and mentors rejected; re-plan keeps progress",
+      "ok": true,
+      "seconds": 1.226
+    },
+    {
+      "name": "test_practical_exercise_flow",
+      "label": "Practical exercise: answer key hidden, graded, plan adapts, retry works",
+      "ok": true,
+      "seconds": 0.983
+    },
+    {
+      "name": "test_exercise_design_is_validated",
+      "label": "Exercise design validated (rubric sums to 100, unknown records stripped)",
+      "ok": true,
+      "seconds": 0.0
+    },
+    {
+      "name": "test_completion_notifies_hr_and_graduates",
+      "label": "Completion detected, HR notified, hire moves to existing employees",
+      "ok": true,
+      "seconds": 1.279
+    },
+    {
+      "name": "test_completed_hires_move_to_existing_after_grace_period",
+      "label": "Hires move to existing employees after the grace period",
+      "ok": true,
+      "seconds": 0.487
+    },
+    {
+      "name": "test_render_real_mp4",
+      "label": "Real video render: MP4 with video and audio streams",
+      "ok": true,
+      "seconds": 8.42
+    }
+  ]
+}

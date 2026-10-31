@@ -1,0 +1,19 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg espeak-ng fonts-dejavu-core
+      - run: pip install -r backend/requirements.txt
+      - name: Run tests (Claude replaced by recorded responses — no API key needed)
+        working-directory: backend
+        run: python -m pytest -q
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Type-check and build the website
+        working-directory: frontend
+        run: npm ci && npx tsc --noEmit && npx vite build
