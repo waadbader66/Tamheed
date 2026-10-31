@@ -41,7 +41,7 @@ SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USER)
 # Safety net for the demo: invitations are only emailed to these addresses.
-EMAIL_ALLOWLIST = {e.strip().lower() for e in os.environ.get("EMAIL_ALLOWLIST", "waadbader66@gmail.com").split(",") if e.strip()}
+EMAIL_ALLOWLIST = {e.strip().lower() for e in os.environ.get("EMAIL_ALLOWLIST", "*").split(",") if e.strip()}
 
 VIDEO_FPS = int(os.environ.get("VIDEO_FPS", "20"))
 VIDEO_W = int(os.environ.get("VIDEO_W", "1280"))

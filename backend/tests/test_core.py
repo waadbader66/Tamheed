@@ -4,7 +4,7 @@ from pathlib import Path
 
 TMP = Path(tempfile.mkdtemp())
 os.environ.update(DATABASE_URL=f"sqlite:///{TMP/'t.db'}", TAMHEED_STORAGE=str(TMP / "storage"), DISABLE_WORKER="1",
-                  ANTHROPIC_API_KEY="", SMTP_USER="", SMTP_PASSWORD="", EMAIL_ALLOWLIST="waadbader@gmail.com")
+                  ANTHROPIC_API_KEY="", SMTP_USER="", SMTP_PASSWORD="", EMAIL_ALLOWLIST="tamheed.demo@gmail.com")
 
 import pytest
 from fastapi.testclient import TestClient
@@ -66,7 +66,7 @@ def test_login_errors_and_role_separation(client):
 
 def test_full_flow_personalisation_and_isolation(client):
     login(client, "hr@rimal.example", "Rimal-HR-2026!")
-    a = create(client, "T-1", "Sami Test", "waadbader+sami@gmail.com", "CV_Sami_Al-Rashid_embedded.txt")
+    a = create(client, "T-1", "Sami Test", "tamheed.demo+sami@gmail.com", "CV_Sami_Al-Rashid_embedded.txt")
     b = create(client, "T-2", "Hana Test", "hana.test@rimal.example", "CV_Hana_Al-Fahad_projects.txt")
     assert a.status_code == 200 and b.status_code == 200
     assert create(client, "T-1", "Dup", "dup@x.com", None).status_code == 409  # duplicate prevention
@@ -169,8 +169,8 @@ def test_allowlist_star_allows_any_address(monkeypatch):
     from app import mailer
     monkeypatch.setenv("EMAIL_ALLOWLIST", "*")
     assert mailer.allowed("someone@company.com") and mailer.allowed("x@y.org")
-    monkeypatch.setenv("EMAIL_ALLOWLIST", "waadbader66@gmail.com")
-    assert mailer.allowed("waadbader66+a@gmail.com") and not mailer.allowed("someone@company.com")
+    monkeypatch.setenv("EMAIL_ALLOWLIST", "tamheed.demo@gmail.com")
+    assert mailer.allowed("tamheed.demo+a@gmail.com") and not mailer.allowed("someone@company.com")
 
 
 def test_hr_can_delete_new_hire_and_everything_goes(client):
