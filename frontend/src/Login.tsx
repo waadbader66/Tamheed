@@ -37,6 +37,7 @@ export function Login({ onDone, notice }: { onDone: (u: any) => void; notice?: s
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (judgeOn && !username.trim() && !password) return judge();
     if (!username.trim() || !password) { setErr("Enter your username and password."); return; }
     setBusy(true); setErr("");
     try { onDone(await api("/auth/login", { body: { username: username.trim(), password: password.trim() } })); }
@@ -57,10 +58,7 @@ export function Login({ onDone, notice }: { onDone: (u: any) => void; notice?: s
         {notice && !err && <div className="note">{notice}</div>}
         {err && <div className="err" role="alert">{err}</div>}
         <button className="primary big" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
-        {judgeOn && <div className="judge-box">
-          <div className="or"><span>Hackathon judges</span></div>
-          <button type="button" className="judge-btn" disabled={busy} onClick={judge}>Sign in as judge — no username or password needed</button>
-        </div>}
+        {judgeOn && <div className="judge-note"><b>Hackathon judges:</b> leave username and password empty and click <b>Sign in</b>.</div>}
       </form>
     </div>
   );
