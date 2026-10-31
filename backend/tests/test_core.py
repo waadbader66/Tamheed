@@ -56,12 +56,33 @@ def drain():
     db.close()
 
 
-def test_login_errors_and_role_separation(client):
+def test_login_errors_role_separation_and_judge_access(client, monkeypatch):
     assert login(client, "hr@rimal.example", "wrong").status_code == 401
     assert login(client, "hr@rimal.example", "Rimal-HR-2026!").status_code == 200
     assert client.get("/api/me/workspace").status_code == 403  # HR has no employee workspace
     client.cookies.clear()
     assert client.get("/api/hr/overview").status_code == 401
+    # judges: empty username + password signs in to a separate HR account that can't delete
+    monkeypatch.delenv("JUDGE_ACCESS_KEY", raising=False)  # independent of any local .env
+    client.cookies.clear()
+    monkeypatch.setenv("JUDGE_ACCESS", "off")
+    assert client.post("/api/auth/judge", json={}).status_code == 403                           # switched off
+    assert client.get("/api/health").json()["judge_access"] is False
+    monkeypatch.delenv("JUDGE_ACCESS")                                                           # on by default
+    assert client.get("/api/health").json()["judge_access"] is True
+    monkeypatch.setenv("JUDGE_ACCESS_KEY", "judge-key-1234567890")
+    assert client.post("/api/auth/judge", json={"key": "wrong-key-1234567890"}).status_code == 403
+    assert client.get("/api/health").json()["judge_access"] is True
+    r = client.post("/api/auth/judge", json={})                                                # one-click button
+    assert r.status_code == 200 and r.json()["judge"] and r.json()["kind"] == "hr"
+    client.cookies.clear()
+    r = client.post("/api/auth/judge", json={"key": "judge-key-1234567890"})                   # link with key
+    assert r.status_code == 200 and r.json()["judge"]
+    assert client.get("/api/hr/overview").status_code == 200 and client.get("/api/hr/evaluation").status_code == 200
+    assert client.delete("/api/hr/employees/1").status_code == 403                                 # judges can't delete
+    monkeypatch.setenv("JUDGE_ACCESS", "off")
+    client.cookies.clear()
+    assert client.post("/api/auth/judge", json={"key": "judge-key-1234567890"}).status_code == 403  # switched off
 
 
 def test_full_flow_personalisation_and_isolation(client):
@@ -409,27 +430,3 @@ def test_completed_hires_move_to_existing_after_grace_period(client):
     db.commit()
     assert completion.graduate_due(db) == 1 and db.get(OnboardingCase, case.id).employee.is_new_hire is False
     db.close()
-
-
-def test_judge_link_signs_in_to_separate_hr_account(client, monkeypatch):
-    monkeypatch.delenv("JUDGE_ACCESS_KEY", raising=False)  # independent of any local .env
-    client.cookies.clear()
-    monkeypatch.setenv("JUDGE_ACCESS", "off")
-    assert client.post("/api/auth/judge", json={}).status_code == 403                           # switched off
-    assert client.get("/api/health").json()["judge_access"] is False
-    monkeypatch.delenv("JUDGE_ACCESS")                                                           # on by default
-    assert client.get("/api/health").json()["judge_access"] is True
-    monkeypatch.setenv("JUDGE_ACCESS_KEY", "judge-key-1234567890")
-    assert client.post("/api/auth/judge", json={"key": "wrong-key-1234567890"}).status_code == 403
-    assert client.get("/api/health").json()["judge_access"] is True
-    r = client.post("/api/auth/judge", json={})                                                # one-click button
-    assert r.status_code == 200 and r.json()["judge"] and r.json()["kind"] == "hr"
-    client.cookies.clear()
-    r = client.post("/api/auth/judge", json={"key": "judge-key-1234567890"})                   # link with key
-    assert r.status_code == 200 and r.json()["judge"]
-    assert client.get("/api/hr/overview").status_code == 200 and client.get("/api/hr/evaluation").status_code == 200
-    any_hire = client.get("/api/hr/overview").json()["hires"][0]["id"]
-    assert client.delete(f"/api/hr/employees/{any_hire}").status_code == 403                    # judges can't delete
-    monkeypatch.setenv("JUDGE_ACCESS", "off")
-    client.cookies.clear()
-    assert client.post("/api/auth/judge", json={"key": "judge-key-1234567890"}).status_code == 403  # switched off

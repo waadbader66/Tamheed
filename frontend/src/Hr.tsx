@@ -503,6 +503,7 @@ function Evaluation() {
   const sonnet = setups.find((x: any) => x.summary.setup === "sonnet");
   const rules = setups.find((x: any) => x.summary.setup === "rules");
   const t = d.tests;
+  const v = d.validator;
   return (
     <div className="stack narrow-page">
       <div className="page-h"><h1>Evaluation</h1><p>Every number below comes from real, re-runnable tests — not typed in by hand.</p></div>
@@ -519,7 +520,7 @@ function Evaluation() {
           </table></div>
         )}
         <p className="sub">12 fictional hires across 8 roles, each with an answer sheet of which skills the CV truly proves. “Unsupported” = a skill credited without real evidence.
-          “Safety-check catches” counts plan items the validator had to reject or correct on this set; the checks themselves are proven with deliberately wrong inputs (invented quotes, courses, links, mentors) in the automated tests below.</p>
+          “Safety-check catches” counts plan items the validator had to reject or correct on this set; Claude made no such mistakes here, so section 3 proves the checks work by planting errors on purpose.</p>
       </Card>
 
       {sonnet && <Card title="2 · Robustness & adaptation (Claude Sonnet 5.5)">
@@ -539,19 +540,27 @@ function Evaluation() {
           <Pill tone={sonnet.fallback.valid_plan && String(sonnet.fallback.source).startsWith("Rules") ? "ok" : "bad"}>{sonnet.fallback.valid_plan ? "Pass" : "Fail"}</Pill></div>}
       </Card>}
 
-      <Card title="3 · Automated tests" action={t && <Pill tone={t.failed ? "bad" : "ok"}>{t.passed}/{t.total} passed</Pill>}>
+      {v && <Card title="3 · Does the safety check matter? Planted-error test" action={<Pill tone={v.summary.caught === v.summary.planted ? "ok" : "bad"}>{v.summary.caught}/{v.summary.planted} caught</Pill>}>
+        <p className="sub" style={{ marginTop: 0 }}>We planted {v.summary.error_types} kinds of mistakes into plans for the same {v.summary.cases} hires ({v.summary.planted} errors) and ran them through the validator.
+          Without it, all {v.summary.planted - v.summary.caught_without_validator} would reach the new hire. Valid evidence kept: {v.summary.valid_evidence_kept}%. Re-run with <code>python -m eval.validator_check</code> (free, no AI calls).</p>
+        <table className="tbl"><thead><tr><th>Planted mistake</th><th>With validator</th><th>Without validator</th></tr></thead>
+          <tbody>{Object.values(v.by_type).map((x: any) => <tr key={x.label} className="noclick"><td>{x.label}</td>
+            <td className={x.caught === x.planted ? "best" : ""}>{x.caught}/{x.planted} caught</td><td className="sub">{x.caught_without_validator}/{x.planted}</td></tr>)}</tbody></table>
+      </Card>}
+
+      <Card title="4 · Automated tests" action={t && <Pill tone={t.failed ? "bad" : "ok"}>{t.passed}/{t.total} passed</Pill>}>
         {!t ? <Empty>Not run yet.</Empty> : <>
           <p className="sub" style={{ marginTop: 0 }}>Run {t.ran_at} · {t.seconds}s · re-run with <code>./scripts/test.sh</code> — also runs automatically on GitHub for every change. Claude is replaced by recorded responses so results are repeatable.</p>
           <div className="testlist">{t.tests.map((x: any) => <div key={x.name}><span className={x.ok ? "tok" : "tbad"}>{x.ok ? "✓" : "✗"}</span> {x.label}</div>)}</div>
         </>}
       </Card>
 
-      <Card title="4 · What testing found — and what we changed">
+      <Card title="5 · What testing found — and what we changed">
         <table className="tbl"><thead><tr><th>Area</th><th>Found</th><th>Fix</th><th>Verified by</th></tr></thead>
           <tbody>{d.iterations.map((x: any, i: number) => <tr key={i} className="noclick"><td><b>{x.area}</b></td><td className="sub">{x.found}</td><td className="sub">{x.fix}</td><td className="sub">{x.check}</td></tr>)}</tbody></table>
       </Card>
 
-      <Card title="5 · Key decisions & trade-offs">
+      <Card title="6 · Key decisions & trade-offs">
         {d.decisions.map((x: any, i: number) => <div key={i} className="li"><b>{x.decision}</b><div className="sub">{x.why}</div><div className="sub"><i>Trade-off:</i> {x.tradeoff}</div></div>)}
       </Card>
     </div>

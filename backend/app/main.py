@@ -496,7 +496,7 @@ def hr_evaluation(_: User = Depends(require_hr)):
         f = base / name
         return _json.loads(f.read_text()) if f.exists() else None
     return {"setups": [x for x in (load("results/sonnet.json"), load("results/haiku.json"), load("results/rules.json")) if x],
-            "tests": load("results/tests.json"), "iterations": load("iterations.json") or [], "decisions": load("decisions.json") or []}
+            "tests": load("results/tests.json"), "validator": load("results/validator.json"), "iterations": load("iterations.json") or [], "decisions": load("decisions.json") or []}
 
 
 @app.get("/api/hr/email-check")

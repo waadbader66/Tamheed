@@ -1,0 +1,56 @@
+{
+  "summary": {
+    "cases": 12,
+    "error_types": 7,
+    "planted": 84,
+    "caught": 84,
+    "caught_without_validator": 0,
+    "catch_rate": 100.0,
+    "valid_evidence_kept": 100.0
+  },
+  "by_type": {
+    "invented_quote": {
+      "label": "Skill claimed with a quote that is not in the CV",
+      "planted": 12,
+      "caught": 12,
+      "caught_without_validator": 0
+    },
+    "fake_mentor": {
+      "label": "Mentor who is not on the hire's team",
+      "planted": 12,
+      "caught": 12,
+      "caught_without_validator": 0
+    },
+    "invented_course": {
+      "label": "Course that doesn't exist in the catalog",
+      "planted": 12,
+      "caught": 12,
+      "caught_without_validator": 0
+    },
+    "unverified_link": {
+      "label": "External course link not found by web search",
+      "planted": 12,
+      "caught": 12,
+      "caught_without_validator": 0
+    },
+    "out_of_scope_record": {
+      "label": "First-week action citing a record the hire can't see",
+      "planted": 12,
+      "caught": 12,
+      "caught_without_validator": 0
+    },
+    "ungrounded_background": {
+      "label": "Background fact that is not in the CV",
+      "planted": 12,
+      "caught": 12,
+      "caught_without_validator": 0
+    },
+    "missing_responsibility": {
+      "label": "A responsibility left out of the plan",
+      "planted": 12,
+      "caught": 12,
+      "caught_without_validator": 0
+    }
+  },
+  "ran_at": "2026-10-31 13:23"
+}

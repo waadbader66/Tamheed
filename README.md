@@ -108,7 +108,7 @@ SMTP_FROM=you@gmail.com
 
 | Command | What it does |
 |---|---|
-| `./scripts/test.sh` | run the automated tests (15) |
+| `./scripts/test.sh` | run the automated tests (14) |
 | `./scripts/reset_demo.sh` | wipe demo data and re-create the fictional company (stop `dev.sh` first) |
 | `.venv/bin/python scripts/set_hr_password.py` | change the HR password |
 | `.venv/bin/python scripts/issue_temp_password.py <email>` | temporary password for a new hire, without email |
@@ -161,6 +161,7 @@ cd backend
 ../.venv/bin/python -m eval.run_eval sonnet eval/results/sonnet.json   # Claude Sonnet 5.5 (used in production)
 ../.venv/bin/python -m eval.run_eval haiku  eval/results/haiku.json    # Claude Haiku 5.5 (cheaper alternative)
 ../.venv/bin/python -m eval.run_eval rules  eval/results/rules.json    # rule-based baseline, no AI
+../.venv/bin/python -m eval.validator_check eval/results/validator.json  # planted-error test of the validator (free, no AI)
 cd .. && .venv/bin/python scripts/test_report.py                        # automated tests → eval/results/tests.json
 ```
 
@@ -173,6 +174,9 @@ cd .. && .venv/bin/python scripts/test_report.py                        # automa
   - problems flagged to HR, injection resistance and validator catches;
   - time and cost per hire;
   - an adaptation test (project change) and a fallback test (Claude unavailable).
+- **Does the validator matter?** `validator_check.py` plants 7 kinds of mistakes (invented CV quote, fake mentor,
+  made-up course, unverified link, out-of-scope record, ungrounded background, missing responsibility) into plans for the
+  same 12 hires. Result: **84/84 caught with the validator, 0/84 without it**, and 100% of valid evidence kept.
 - `iterations.json` records what testing found and what changed. `decisions.json` records the trade-offs.
 - GitHub Actions runs the tests and the website build on every push (`.github/workflows/tests.yml`).
 
