@@ -17,7 +17,7 @@ COPY backend/requirements.txt backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 COPY backend/ backend/
 COPY --from=web /app/frontend/dist frontend/dist
-# Database + generated files live on a Railway volume mounted at /data (survives redeploys).
+# Database + generated files live on a disk mounted at /data (survives redeploys).
 ENV DATABASE_URL=sqlite:////data/tamheed.db \
     TAMHEED_STORAGE=/data/storage \
     COOKIE_SECURE=1 \
