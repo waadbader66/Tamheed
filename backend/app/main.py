@@ -87,7 +87,7 @@ def judge_login(body: JudgeIn, response: Response, db: Session = Depends(get_db)
     import hmac
     import os
     import secrets as _secrets
-    key = os.environ.get("JUDGE_ACCESS_KEY", "")
+    key = os.environ.get("JUDGE_ACCESS_KEY", "").strip().strip('"').strip("'").strip()  # tolerate copy-paste spaces/quotes
     if not key or len(key) < 16 or not hmac.compare_digest(body.key.strip(), key):
         raise HTTPException(403, "This judge link is not valid or has been switched off.")
     u = db.query(User).filter_by(username=JUDGE_USERNAME).first()
