@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Wipes demo data (database + generated files) and re-seeds the fictional company. Stop dev.sh first.
 cd "$(dirname "$0")/.."
 rm -rf data/storage/employees data/tamheed.db data/tamheed.db-*
